@@ -1,0 +1,43 @@
+import telebot
+from telebot import types
+import random
+
+# сохранили ключ доступа к нашему чату с ботом
+token = '5477754272:AAEP3i7SkfoPfLri0SQYrOqsS6mr0l-ECBQ'
+# создали прграмму для управления ботом
+bot = telebot.TeleBot(token)
+
+# создаем клавиатуру
+keyboard = types.ReplyKeyboardMarkup()
+button1 = types.KeyboardButton('Играть')
+button2 = types.KeyboardButton('Нет')
+keyboard.add(button1,button2)
+
+@bot.message_handler(commands=['start', 'hello', 'hi'])
+def start_message(message):
+  msg = bot.send_message(message.chat.id, f'Привет {message.chat.first_name}, начнем игру?', reply_markup=keyboard)
+  bot.register_next_step_handler(msg, check_answer)
+
+def check_answer(message):
+  if message.text == 'Играть':
+    bot.send_message(message.chat.id, 'Ок, тогда вот правила, нужно угадать число от 1 до 10 за 3 попытки')
+    random_number = random.choice(range(1,11))  
+    print(random_number)
+    game(message, 3, random_number)
+  else:
+    bot.send_message(message.chat.id, 'Окей, до встречи')
+
+def game(message, attempts, random_number):
+  msg = bot.send_message(message.chat.id, 'Выбери число')
+  bot.register_next_step_handler(msg, check_number, attempts -1, random_number)
+  
+def check_number(message, attempts, random_number):
+  if message.text == str(random_number):
+    bot.send_message(message.chat.id, 'Вы победили!')
+  elif attempts == 0:
+    bot.send_message(message.chat.id, 'Извините, у Вас закончились попытки')
+  else:
+    bot.send_message(message.chat.id, 'Попробуйте еще раз')
+    game(message, attempts, random_number)              
+    
+bot.polling()
